@@ -4,6 +4,7 @@ from diamonds.data import load_data
 import matplotlib.pyplot as plt
 import requests
 
+
 st.markdown("# Diamonds Price Prediction")
 df_diamonds = load_data()
 st.dataframe(df_diamonds.head())
