@@ -15,10 +15,6 @@ df_diamonds = load_diamonds_data()
 
 st.dataframe(df_diamonds)
 
-fig = sns.histplot(df_diamonds["price"], bins=50)
-plt.title("Distribution of Diamond Prices")
-st.pyplot(fig.figure)
-
 
 fig = px.scatter_3d(df_diamonds, x="x", 
                  y="y", z="z", color="cut",
