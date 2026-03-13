@@ -1,6 +1,7 @@
 
 import os
 import pickle
+from pathlib import Path
 
 import loguru
 import mlflow
@@ -14,6 +15,13 @@ from diamonds.mlflow_utils import configure_mlflow
 logger = loguru.logger
 
 
+def _local_model_path(name: str) -> Path:
+    project_root = Path(__file__).resolve().parents[2]
+    model_dir = project_root / MODEL_FOLDER
+    model_dir.mkdir(parents=True, exist_ok=True)
+    return model_dir / f"{name}.pkl"
+
+
 def save_model(
     pipeline: Pipeline,
     name: str,
@@ -22,7 +30,7 @@ def save_model(
     model_registry: str = "local",
 ) -> None:
     """Save the model to the specified path (local only by default)."""
-    estimator_path = os.path.join(MODEL_FOLDER, f"{name}.pkl")
+    estimator_path = _local_model_path(name)
     with open(estimator_path, "wb") as f:
         pickle.dump(pipeline, f)
 
@@ -94,7 +102,7 @@ def load_model(
     model_registry: str = "local",
     model_alias: str = "prod") -> Pipeline:
     """Load the model from the specified path."""
-    estimator_path = os.path.join(MODEL_FOLDER, f"{name}.pkl")
+    estimator_path = _local_model_path(name)
 
     if model_registry == "mlflow":
         configure_mlflow()

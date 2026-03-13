@@ -1,15 +1,12 @@
 import pandas as pd
 import loguru
 import os
+from pathlib import Path
 
 # For loading data
 import seaborn as sns
 
 from diamonds.params import DATA_PATH
-from diamonds.model import create_preproc
-from diamonds.registry import save_model, load_model
-
-from sklearn.model_selection import train_test_split
 
 logger = loguru.logger
 
@@ -29,10 +26,12 @@ def load_data() -> pd.DataFrame:
         The diamonds dataset
     """
     logger.info("Loading the diamonds dataset...")
-    csv_path = os.path.join(DATA_PATH,"raw", "diamonds.csv")
-    if not os.path.exists(csv_path):
+    project_root = Path(__file__).resolve().parents[2]
+    csv_path = project_root / DATA_PATH / "raw" / "diamonds.csv"
+    if not csv_path.exists():
         logger.info("Caching the diamonds dataset...")
         df = sns.load_dataset("diamonds")
+        csv_path.parent.mkdir(parents=True, exist_ok=True)
         df.to_csv(csv_path, index=False)
         logger.info("✅ Diamonds dataset cached successfully.")
     else:
@@ -79,6 +78,9 @@ def preprocess_data( X: pd.DataFrame
     pd.DataFrame
         The preprocessed diamonds dataset
     """
+    from diamonds.model import create_preproc
+    from diamonds.registry import save_model, load_model
+
     # Instantier la pipeline 
     if train : 
         preprocessor = create_preproc()
@@ -107,6 +109,11 @@ def create_X_y(df: pd.DataFrame,
     (pd.DataFrame, pd.Series)
         The feature matrix X and target vector y
     """
+    from sklearn.model_selection import train_test_split
+
+    if "price" not in df.columns:
+        raise ValueError("Input dataframe must contain a 'price' column.")
+
     
     X = df.drop(columns="price")
     y = df["price"]
@@ -119,5 +126,10 @@ def create_X_y(df: pd.DataFrame,
 if __name__ == "__main__":
     raw_df = load_data()
     df_clean = clean_data(raw_df)
-    df_preprocessed = preprocess_data(df_clean)
-    X_train, X_test, y_train, y_test = create_X_y(df_preprocessed)
+    X_train, X_test, y_train, y_test = create_X_y(df_clean)
+    X_train_preprocessed = preprocess_data(X_train, train=True)
+    X_test_preprocessed = preprocess_data(X_test, train=False)
+    logger.info(
+        f"Prepared train/test sets: X_train={X_train_preprocessed.shape}, X_test={X_test_preprocessed.shape}, "
+        f"y_train={y_train.shape}, y_test={y_test.shape}"
+    )
