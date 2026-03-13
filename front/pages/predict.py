@@ -5,7 +5,7 @@ import requests
 import streamlit as st
 
 from diamonds.data import load_data
-import plotly.express as px
+
 
 @st.cache_data
 def load_diamonds_data():
